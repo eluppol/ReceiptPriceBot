@@ -16,7 +16,7 @@ def chat(update, context):
     if photo_list:
 
         logger.info("downloading file...")
-        file = context.bot.get_file((max(photo_list, key=lambda photo: photo.width))).download(f'images/tmp.jpg')
+        file = context.bot.get_file((max(photo_list, key=lambda photo: photo.width))).download(f'tmp.jpg')
         if file:
             img = Image.open(file)
             logger.info("parsing file...")

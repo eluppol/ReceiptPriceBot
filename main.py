@@ -3,9 +3,11 @@
 import logging
 import os
 import sys
+import threading
 
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
+from modules import server
 from modules.chat import chat
 
 
@@ -33,6 +35,7 @@ def main():
 
     updater.start_polling()
     log.info('bot started')
+    threading.Thread(target=server.run).start()
     updater.idle()
 
 

@@ -1,3 +1,4 @@
+import os
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
@@ -13,6 +14,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def run(server_class=HTTPServer, handler_class=BaseHTTPRequestHandler):
-    server_address = ('', 8000)
+    server_address = ('', os.environ['PORT'])
     httpd = server_class(server_address, handler_class)
     httpd.serve_forever()

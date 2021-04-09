@@ -31,7 +31,13 @@ def main():
 
     log.info('registered all handlers')
 
-    updater.start_polling()
+    port = int(os.environ.get('PORT', '8080'))
+    url = os.environ.get('URL', 'https://receipt-price-bot.herokuapp.com/')
+    # add handlers
+    updater.start_webhook(listen="0.0.0.0",
+                          port=port,
+                          url_path=bot_token,
+                          webhook_url=url + bot_token)
     log.info('bot started')
     updater.idle()
 

@@ -14,7 +14,7 @@ def error(update, context):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.DEBUG,
                         format='[%(asctime)s][%(module)s][%(levelname)s] %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
     log = logging.getLogger()

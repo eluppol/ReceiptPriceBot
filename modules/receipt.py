@@ -126,7 +126,7 @@ class ReceiptItemType(Enum):
 
 def parse_receipt(text):
     x_in_number = re.search("[\\n^][0-9]+x\\s", text)
-    return [[match(token, x_in_number) for token in re.split('[ ;|!@]', line.strip()) if token]
+    return [[match(token, x_in_number) for token in re.split('[;|!@\\s]', line.strip()) if token]
             for line in text.split('\n')
             if line]
 

@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
-
+import json
 import logging
 import os
 
 import pytesseract
 from PIL import Image
+from pip._vendor import requests
 from telegram import Bot, ParseMode
 from .receipt import process_receipt
 
 logger = logging.getLogger()
+ocr_api_key = os.environ.get('OCR_API_KEY')
 
 
 def chat(update, context):
@@ -16,11 +18,11 @@ def chat(update, context):
     if photo_list:
 
         logger.info("downloading file...")
-        file = context.bot.get_file((max(photo_list, key=lambda photo: photo.width))).download(f'tmp.jpg')
+        filename = 'tmp.jpg'
+        file = context.bot.get_file((max(photo_list, key=lambda photo: photo.width))).download('tmp.jpg')
         if file:
-            img = Image.open(file)
             logger.info("parsing file...")
-            text = process_image(img)
+            text = process_image_online(filename)
             if "subtotal" in text.lower():
                 try:
                     receipt = process_receipt(text)
@@ -33,11 +35,30 @@ def chat(update, context):
                                               f"Check logs for more details")
 
 
-def process_image(image):
+def process_image_locally(filename):
+    image = Image.open(filename)
     text = pytesseract.image_to_string(image)
     logger.debug(text)
 
     return text
+
+
+def process_image_online(filename):
+    if ocr_api_key:
+        payload = {'isTable': True,
+                   'apikey': ocr_api_key,
+                   'OCREngine': 2,
+                   }
+        with open(filename, 'rb') as f:
+            r = requests.post('https://api.ocr.space/parse/image',
+                              files={filename: f},
+                              data=payload,
+                              )
+
+        pages = json.loads(r.content.decode())['ParsedResults']
+        result = '\n'.join([page['ParsedText'] for page in pages])
+        logger.debug("Returned: " + result)
+        return result
 
 
 def format_receipt(receipt):

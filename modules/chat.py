@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import functools
 import json
 import logging
 import os
@@ -61,16 +62,24 @@ def process_image_online(filename):
         return result
 
 
+def ordered_subtract(items, common_items):
+    return [item for item in items if item not in common_items]
+
+
 def format_receipt(receipt):
-    items = receipt.items
-    max_quantity = max(len(str(x.quantity)) for x in items)
-    max_name = max([len(x.name) for x in items] + [len(x.description) for x in items])
-    max_price = max(len(str(x.price)) for x in items)
+    descr_items = [[element.strip() for element in item.description.split(",")] for item in receipt.items]
+    intersection = functools.reduce(lambda x, y: set(x) & set(y), descr_items)
+
+    by_name = dict()
+
+    for item, descr in zip(receipt.items, descr_items):
+        name = item.name
+        if name in by_name:
+            by_name[name] &= set(descr)
+        else:
+            by_name[name] = set(descr)
 
     return ('```\n' + '\n'.join([
-        '\n'.join([' | '.join([field + ' ' * (max_field - len(str(field)))
-                               for field, max_field in
-                               zip([f'{item.quantity}x', item.name, f'{item.price:.2f} each'],
-                                   [max_quantity, max_name, max_price])])] +
-                  (item.description and [' | '.join([' ' * (max_quantity + 1), item.description + ' ' * (max_name - len(str(item.description))), ''])] or []))
-        for item in items]) + '\n```') + f"\n```\nSubtotal: {receipt.subtotal}\nTotal: {receipt.total}\n```"
+        f'{item.price:.2f} {item.name} ({item.quantity})\n      {",".join(ordered_subtract(description, by_name[item.name].union(intersection))[:2])}'
+        for item, description in zip(receipt.items, descr_items)]) + '```\n'
+        + f"\n```\nSubtotal: {receipt.subtotal}\nTotal: {receipt.total}\n```")

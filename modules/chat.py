@@ -79,7 +79,16 @@ def format_receipt(receipt):
         else:
             by_name[name] = set(descr)
 
-    return ('```\n' + '\n'.join([
-        f'{item.price:.2f} {item.name} ({item.quantity})\n      {",".join(ordered_subtract(description, by_name[item.name].union(intersection))[:2])}'
-        for item, description in zip(receipt.items, descr_items)]) + '```\n'
-        + f"\n```\nSubtotal: {receipt.subtotal}\nTotal: {receipt.total}\n```")
+
+    lines = []
+
+    for item, description in zip(receipt.items, descr_items):
+        line = f'{item.price:5.2f} {item.name} {f"({item.quantity})" if item.quantity > 1 else ""}'
+        description_text = ",".join(ordered_subtract(description, by_name[item.name].union(intersection))[:2])
+
+        if description_text:
+            line += f'\n      {description_text}'
+
+        lines.append(line)
+
+    return '```\n' + '\n\n'.join(lines) + '```\n' + f"\n```\nSubtotal: {receipt.subtotal}\nTotal: {receipt.total}\n```"
